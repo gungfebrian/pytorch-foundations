@@ -2,6 +2,7 @@ import torch
 import pytest
 
 from pytorch_foundations.data import (
+    TurtleObservations,
     generate_observations,
     image_level_split,
     session_aware_split,
@@ -16,6 +17,9 @@ def test_generate_observations_is_deterministic_and_aligned():
     assert torch.equal(first.labels, second.labels)
     assert torch.equal(first.session_ids, second.session_ids)
     assert first.features.ndim == 2
+    assert first.features.dtype == torch.float32
+    assert first.labels.dtype == torch.long
+    assert first.session_ids.dtype == torch.long
     assert len(first.features) == len(first.labels) == len(first.session_ids)
 
 
@@ -65,3 +69,14 @@ def test_split_functions_require_a_proper_fraction(fraction):
 
     with pytest.raises(ValueError, match="test_fraction"):
         session_aware_split(data, test_fraction=fraction)
+
+
+def test_split_rejects_malformed_scalar_feature_observations():
+    malformed = TurtleObservations(
+        features=torch.tensor(1.0, dtype=torch.float32),
+        labels=torch.tensor([0], dtype=torch.long),
+        session_ids=torch.tensor([0], dtype=torch.long),
+    )
+
+    with pytest.raises(ValueError, match="features must be a 2D tensor"):
+        image_level_split(malformed)

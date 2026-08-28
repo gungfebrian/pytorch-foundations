@@ -12,9 +12,6 @@ dependencies = ["torch>=2.3"]
 [project.optional-dependencies]
 dev = ["pytest>=8.0", "ruff>=0.6"]
 
-[project.scripts]
-pytorch-foundations = "pytorch_foundations.cli:main"
-
 [tool.setuptools]
 package-dir = {"" = "src"}
 

@@ -23,9 +23,9 @@ def _validate_test_fraction(test_fraction: float) -> None:
 
 
 def _validate_observations(observations: TurtleObservations) -> None:
-    num_rows = len(observations.features)
     if observations.features.ndim != 2:
         raise ValueError("features must be a 2D tensor")
+    num_rows = len(observations.features)
     if len(observations.labels) != num_rows or len(observations.session_ids) != num_rows:
         raise ValueError("features, labels, and session_ids must have the same length")
     if num_rows < 2:

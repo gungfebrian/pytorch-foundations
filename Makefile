@@ -16,6 +16,7 @@ test:
 
 lint:
 	@echo "Checking style with Ruff..."
+	.venv/bin/ruff format --check .
 	.venv/bin/ruff check .
 
 check: lint test

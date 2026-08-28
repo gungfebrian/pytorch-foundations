@@ -24,7 +24,9 @@ def _overlapping_sessions(data, train_idx, test_idx) -> int:
     return len(train_sessions & test_sessions)
 
 
-def _serialize_metrics(metrics: TrainingMetrics, overlapping_sessions: int) -> dict[str, float | int]:
+def _serialize_metrics(
+    metrics: TrainingMetrics, overlapping_sessions: int
+) -> dict[str, float | int]:
     payload = asdict(metrics)
     payload["overlapping_sessions"] = overlapping_sessions
     return payload

@@ -11,7 +11,7 @@ from .training import TrainingMetrics, train_and_evaluate
 
 def _dataset_summary(data) -> dict[str, int]:
     return {
-        "n_samples": int(len(data.labels)),
+        "n_samples": len(data.labels),
         "feature_dim": int(data.features.shape[1]),
         "n_classes": int(data.labels.unique().numel()),
         "n_sessions": int(data.session_ids.unique().numel()),

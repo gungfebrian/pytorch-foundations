@@ -1,5 +1,5 @@
-import torch
 import pytest
+import torch
 
 from pytorch_foundations.data import (
     TurtleObservations,

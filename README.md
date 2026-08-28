@@ -1,0 +1,84 @@
+# PyTorch Foundations
+
+## Why this module exists
+
+I built this small module to practice the full loop of a PyTorch classification project without pretending that a toy dataset is a real benchmark. My goal was to make one idea unmistakable: a model can look excellent when the data split quietly leaks session-specific clues from training into testing.
+
+## What it demonstrates
+
+This repository compares two ways to split synthetic turtle observations:
+
+- An image-level split that treats every image independently.
+- A session-aware split that keeps all images from the same capture session together.
+
+The synthetic observations are designed so that images from one session share stronger style cues than the small image-to-image noise. That makes it easy to see how random splitting can reward memorizing the session instead of recognizing the turtle.
+
+## Experiment
+
+The experiment generates 256 synthetic samples with 24 features each, spread across 8 turtle identities and 32 capture sessions. I train the same small neural network twice:
+
+- Once after an image-level split.
+- Once after a session-aware split.
+
+Both runs use the same seed and the same training settings so the split strategy is the main difference.
+
+## Quick start
+
+```bash
+make setup
+make train
+make check
+```
+
+The training command writes a JSON report to `artifacts/metrics.json`.
+
+## Verified result
+
+The verified `make train` run used `--epochs 40 --seed 42` and produced this dataset summary:
+
+- Samples: 256
+- Feature dimension: 24
+- Turtle classes: 8
+- Capture sessions: 32
+
+The image-level split reported:
+
+- Overlapping sessions across train and test: 28
+- Test accuracy: 1.000
+- Final train loss shown by the CLI: 0.000
+- Exact final train loss in the JSON report: `1.0741246114776004e-07`
+
+The session-aware split reported:
+
+- Overlapping sessions across train and test: 0
+- Test accuracy: 0.875
+- Final train loss shown by the CLI: 0.000
+- Exact final train loss in the JSON report: `5.898374055846034e-08`
+
+For me, that gap is the point of the exercise. The image-level split looks perfect because images from the same capture session can appear in both partitions. The session-aware split blocks that path and gives a more honest educational result.
+
+## What I learned
+
+I learned that data splitting is part of model design, not an afterthought. When grouped examples share background, lighting, camera, and pose cues, a random split can make a classifier look smarter than it really is. I also practiced keeping experiments reproducible with fixed seeds, a small CLI, and automated checks.
+
+## Limitations
+
+- The data is synthetic, so this is an educational example rather than a real conservation benchmark.
+- The feature vectors are already numeric observations, not raw images.
+- The model is intentionally compact and does not explore regularization, mini-batching, or hyperparameter tuning.
+- The evaluation uses one deterministic train/test split per strategy rather than repeated grouped cross-validation.
+
+## Repository structure
+
+- `src/pytorch_foundations/data.py`: synthetic observation generation and safe split helpers
+- `src/pytorch_foundations/model.py`: compact classifier
+- `src/pytorch_foundations/training.py`: deterministic training and evaluation loop
+- `src/pytorch_foundations/cli.py`: reproducible experiment command and JSON report writer
+- `tests/`: focused checks for data, model, training, and CLI behavior
+- `docs/learning-notes.md`: my plain-language study notes for this module
+
+## Next steps
+
+- Add mini-batching with `DataLoader`.
+- Add a validation split and early stopping.
+- Replace the toy grouped data with a real, well-documented dataset collected with consent.

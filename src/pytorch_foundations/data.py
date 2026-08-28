@@ -115,9 +115,7 @@ def session_aware_split(
         sessions = torch.unique(observations.session_ids[label_mask], sorted=True)
 
         if len(sessions) < 2:
-            raise ValueError(
-                "each turtle must have at least two sessions for session-aware splitting"
-            )
+            raise ValueError("each turtle must have at least two sessions for session-aware splitting")
 
         session_order = torch.randperm(len(sessions), generator=generator)
         shuffled_sessions = sessions[session_order]

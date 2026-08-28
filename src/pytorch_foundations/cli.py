@@ -11,7 +11,7 @@ from .training import TrainingMetrics, train_and_evaluate
 
 def _dataset_summary(data) -> dict[str, int]:
     return {
-        "n_samples": len(data.labels),
+        "n_samples": int(len(data.labels)),
         "feature_dim": int(data.features.shape[1]),
         "n_classes": int(data.labels.unique().numel()),
         "n_sessions": int(data.session_ids.unique().numel()),
@@ -24,9 +24,7 @@ def _overlapping_sessions(data, train_idx, test_idx) -> int:
     return len(train_sessions & test_sessions)
 
 
-def _serialize_metrics(
-    metrics: TrainingMetrics, overlapping_sessions: int
-) -> dict[str, float | int]:
+def _serialize_metrics(metrics: TrainingMetrics, overlapping_sessions: int) -> dict[str, float | int]:
     payload = asdict(metrics)
     payload["overlapping_sessions"] = overlapping_sessions
     return payload

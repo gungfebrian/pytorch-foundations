@@ -8,6 +8,7 @@ from torch import nn
 
 from .batches import make_dataloader
 from .data import TurtleObservations
+from .metrics import classification_metrics
 from .model import TurtleClassifier
 
 
@@ -17,6 +18,10 @@ class TrainingMetrics:
     final_train_loss: float
     train_accuracy: float
     test_accuracy: float
+    test_macro_precision: float
+    test_macro_recall: float
+    test_macro_f1: float
+    test_confusion_matrix: tuple[tuple[int, ...], ...]
 
 
 def set_deterministic_seed(seed: int) -> None:
@@ -116,11 +121,17 @@ def train_and_evaluate(
         train_logits = model(train_features)
         test_logits = model(test_features)
         train_accuracy = _accuracy(train_logits, train_labels)
-        test_accuracy = _accuracy(test_logits, test_labels)
+        test_metrics = classification_metrics(test_logits, test_labels, n_classes=n_classes)
 
     return TrainingMetrics(
         epochs=epochs,
         final_train_loss=float(final_train_loss),
         train_accuracy=float(train_accuracy),
-        test_accuracy=float(test_accuracy),
+        test_accuracy=test_metrics.accuracy,
+        test_macro_precision=test_metrics.macro_precision,
+        test_macro_recall=test_metrics.macro_recall,
+        test_macro_f1=test_metrics.macro_f1,
+        test_confusion_matrix=tuple(
+            tuple(int(value) for value in row) for row in test_metrics.confusion_matrix.tolist()
+        ),
     )

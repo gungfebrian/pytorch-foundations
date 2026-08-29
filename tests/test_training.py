@@ -22,6 +22,10 @@ def test_train_and_evaluate_returns_finite_bounded_metrics():
     assert metrics.epochs == 2
     assert 0.0 <= metrics.train_accuracy <= 1.0
     assert 0.0 <= metrics.test_accuracy <= 1.0
+    assert 0.0 <= metrics.test_macro_precision <= 1.0
+    assert 0.0 <= metrics.test_macro_recall <= 1.0
+    assert 0.0 <= metrics.test_macro_f1 <= 1.0
+    assert len(metrics.test_confusion_matrix) == 4
     assert math.isfinite(metrics.final_train_loss)
 
 

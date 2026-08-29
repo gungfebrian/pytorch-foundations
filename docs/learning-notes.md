@@ -26,11 +26,13 @@ That is why the image-level split in this module looks almost perfect while the 
 
 In the verified run, the image-level split had 28 overlapping sessions between training and testing and reached 1.000 test accuracy. The session-aware split had 0 overlapping sessions and reached 0.875 test accuracy. I read that difference as evidence that the easier split leaks information the model should not get for free.
 
+I also record macro precision, recall, F1, and a confusion matrix. Macro F1 gives every turtle identity equal weight, which makes the session-aware result easier to inspect than accuracy alone.
+
 ## Limitations
 
 - I am using synthetic numeric observations instead of a real image dataset.
 - One deterministic split per strategy is easy to reproduce, but it is not the same as a full evaluation study.
-- The current model is intentionally small and leaves out batching, regularization, and validation monitoring.
+- The current model is intentionally small and leaves out regularization, early stopping, and repeated grouped evaluation.
 - Perfect or near-perfect results here should not be treated as ecological performance claims.
 
 ## Active recall
@@ -39,6 +41,6 @@ If I had to explain the core lesson from memory, I would say this: when photos f
 
 ## Next exercises
 
-1. Add mini-batching with `DataLoader`.
-2. Add validation tracking and early stopping.
+1. Add validation tracking and early stopping.
+2. Compare repeated grouped splits and summarize variation.
 3. Try a real grouped dataset with clear consent and documentation.

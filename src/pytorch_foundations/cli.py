@@ -29,6 +29,7 @@ def _serialize_metrics(
 ) -> dict[str, float | int]:
     payload = asdict(metrics)
     payload["overlapping_sessions"] = overlapping_sessions
+    payload["test_confusion_matrix"] = [list(row) for row in payload["test_confusion_matrix"]]
     return payload
 
 
@@ -105,6 +106,7 @@ def main() -> int:
         print(heading)
         print(f"  overlapping sessions: {metrics['overlapping_sessions']}")
         print(f"  test accuracy: {metrics['test_accuracy']:.3f}")
+        print(f"  test macro F1: {metrics['test_macro_f1']:.3f}")
         print(f"  final train loss: {metrics['final_train_loss']:.3f}")
 
     if args.output is not None:

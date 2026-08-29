@@ -24,6 +24,10 @@ def test_run_experiment_returns_report_and_writes_matching_json(tmp_path: Path):
         assert "test_accuracy" in split_metrics
         assert "final_train_loss" in split_metrics
         assert "overlapping_sessions" in split_metrics
+        assert "test_macro_precision" in split_metrics
+        assert "test_macro_recall" in split_metrics
+        assert "test_macro_f1" in split_metrics
+        assert "test_confusion_matrix" in split_metrics
 
     assert result["image_level_split"]["overlapping_sessions"] >= 0
     assert result["session_aware_split"]["overlapping_sessions"] == 0

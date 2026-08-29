@@ -6,6 +6,7 @@ from dataclasses import dataclass
 import torch
 from torch import nn
 
+from .batches import make_dataloader
 from .data import TurtleObservations
 from .model import TurtleClassifier
 
@@ -58,11 +59,14 @@ def train_and_evaluate(
     epochs: int = 40,
     learning_rate: float = 0.03,
     seed: int = 42,
+    batch_size: int | None = None,
 ) -> TrainingMetrics:
     if epochs < 1:
         raise ValueError("epochs must be at least 1")
     if learning_rate <= 0:
         raise ValueError("learning_rate must be positive")
+    if batch_size is not None and batch_size < 1:
+        raise ValueError("batch_size must be positive when provided")
 
     _validate_observations(observations)
     _validate_indices("train_indices", train_indices, len(observations.labels))
@@ -83,13 +87,29 @@ def train_and_evaluate(
 
     final_train_loss = 0.0
     model.train()
+    train_loader = None
+    if batch_size is not None:
+        train_loader = make_dataloader(
+            train_features,
+            train_labels,
+            batch_size=batch_size,
+            shuffle=True,
+            seed=seed,
+        )
+
     for _ in range(epochs):
-        optimizer.zero_grad()
-        train_logits = model(train_features)
-        loss = loss_fn(train_logits, train_labels)
-        loss.backward()
-        optimizer.step()
-        final_train_loss = float(loss.item())
+        if train_loader is None:
+            batches = [(train_features, train_labels)]
+        else:
+            batches = train_loader
+
+        for batch_features, batch_labels in batches:
+            optimizer.zero_grad()
+            train_logits = model(batch_features)
+            loss = loss_fn(train_logits, batch_labels)
+            loss.backward()
+            optimizer.step()
+            final_train_loss = float(loss.item())
 
     model.eval()
     with torch.no_grad():

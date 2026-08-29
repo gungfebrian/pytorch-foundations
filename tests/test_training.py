@@ -88,3 +88,19 @@ def test_train_and_evaluate_rejects_misaligned_observation_lengths():
 
     with pytest.raises(ValueError, match="same length"):
         train_and_evaluate(malformed, train_idx, test_idx)
+
+
+def test_train_and_evaluate_supports_deterministic_mini_batches():
+    data = generate_observations(
+        n_turtles=4,
+        sessions_per_turtle=2,
+        images_per_session=3,
+        feature_dim=6,
+        seed=47,
+    )
+    train_idx, test_idx = image_level_split(data, test_fraction=0.25, seed=53)
+
+    first = train_and_evaluate(data, train_idx, test_idx, epochs=2, batch_size=4, seed=59)
+    second = train_and_evaluate(data, train_idx, test_idx, epochs=2, batch_size=4, seed=59)
+
+    assert first == second

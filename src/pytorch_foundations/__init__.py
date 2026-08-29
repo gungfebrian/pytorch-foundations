@@ -1,5 +1,6 @@
 """PyTorch foundations package."""
 
+from .batches import make_dataloader
 from .data import (
     TurtleObservations,
     generate_observations,
@@ -17,6 +18,7 @@ __all__ = [
     "TurtleObservations",
     "generate_observations",
     "image_level_split",
+    "make_dataloader",
     "normalize_features",
     "session_aware_split",
     "set_deterministic_seed",

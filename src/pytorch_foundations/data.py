@@ -22,6 +22,15 @@ def _validate_test_fraction(test_fraction: float) -> None:
         raise ValueError("test_fraction must be between 0 and 1")
 
 
+def _validate_three_way_fractions(validation_fraction: float, test_fraction: float) -> None:
+    if (
+        not 0 < validation_fraction < 1
+        or not 0 < test_fraction < 1
+        or validation_fraction + test_fraction >= 1
+    ):
+        raise ValueError("validation and test fractions must be valid and sum to less than 1")
+
+
 def _validate_observations(observations: TurtleObservations) -> None:
     if observations.features.ndim != 2:
         raise ValueError("features must be a 2D tensor")
@@ -133,3 +142,50 @@ def session_aware_split(
     train_idx = torch.nonzero(~test_mask, as_tuple=False).flatten()
 
     return torch.sort(train_idx).values, torch.sort(test_idx).values
+
+
+def session_aware_train_validation_test_split(
+    observations: TurtleObservations,
+    validation_fraction: float = 0.2,
+    test_fraction: float = 0.25,
+    seed: int = 42,
+) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+    """Split observations into three session-disjoint partitions."""
+    _validate_observations(observations)
+    _validate_three_way_fractions(validation_fraction, test_fraction)
+
+    generator = torch.Generator().manual_seed(seed)
+    validation_session_ids: list[int] = []
+    test_session_ids: list[int] = []
+
+    for label in torch.unique(observations.labels, sorted=True).tolist():
+        label_mask = observations.labels == label
+        sessions = torch.unique(observations.session_ids[label_mask], sorted=True)
+        if len(sessions) < 3:
+            raise ValueError("each turtle must have at least three sessions for a three-way split")
+
+        shuffled_sessions = sessions[torch.randperm(len(sessions), generator=generator)]
+        num_test = min(max(1, round(len(sessions) * test_fraction)), len(sessions) - 2)
+        remaining_after_test = len(sessions) - num_test
+        num_validation = min(
+            max(1, round(len(sessions) * validation_fraction)), remaining_after_test - 1
+        )
+        test_session_ids.extend(shuffled_sessions[:num_test].tolist())
+        validation_session_ids.extend(
+            shuffled_sessions[num_test : num_test + num_validation].tolist()
+        )
+
+    test_sessions = torch.tensor(test_session_ids, dtype=torch.long)
+    validation_sessions = torch.tensor(validation_session_ids, dtype=torch.long)
+    test_mask = torch.isin(observations.session_ids, test_sessions)
+    validation_mask = torch.isin(observations.session_ids, validation_sessions)
+    train_mask = ~(test_mask | validation_mask)
+
+    train_idx = torch.nonzero(train_mask, as_tuple=False).flatten()
+    validation_idx = torch.nonzero(validation_mask, as_tuple=False).flatten()
+    test_idx = torch.nonzero(test_mask, as_tuple=False).flatten()
+    return (
+        torch.sort(train_idx).values,
+        torch.sort(validation_idx).values,
+        torch.sort(test_idx).values,
+    )

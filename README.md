@@ -76,6 +76,7 @@ I learned that data splitting is part of model design, not an afterthought. When
 - `src/pytorch_foundations/cli.py`: reproducible experiment command and JSON report writer
 - `tests/`: focused checks for data, model, training, and CLI behavior
 - `docs/learning-notes.md`: my plain-language study notes for this module
+- `docs/learning-checklist.md`: active-recall checklist for each study session
 
 ## Next steps
 

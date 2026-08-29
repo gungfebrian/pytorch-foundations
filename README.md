@@ -27,10 +27,12 @@ Both runs use the same seed and the same training settings so the split strategy
 ```bash
 make setup
 make train
+make smoke
 make check
 ```
 
 The training command writes a JSON report to `artifacts/metrics.json`.
+The shorter `make smoke` command exercises the complete CLI path in a few seconds.
 
 ## Verified result
 
@@ -88,6 +90,7 @@ I learned that data splitting is part of model design, not an afterthought. When
 - `tests/`: focused checks for data, model, training, and CLI behavior
 - `docs/learning-notes.md`: my plain-language study notes for this module
 - `docs/learning-checklist.md`: active-recall checklist for each study session
+- `.github/workflows/checks.yml`: Ruff, tests, and the end-to-end CLI smoke check
 
 ## Next steps
 

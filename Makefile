@@ -1,4 +1,4 @@
-.PHONY: setup train test lint check clean
+.PHONY: setup train smoke test lint check clean
 
 setup:
 	@echo "Creating the local environment and installing dependencies..."
@@ -9,6 +9,10 @@ setup:
 train:
 	@echo "Running the reproducible leakage experiment..."
 	.venv/bin/python -m pytorch_foundations.cli --epochs 40 --seed 42 --output artifacts/metrics.json
+
+smoke:
+	@echo "Running a short end-to-end smoke experiment..."
+	.venv/bin/python -m pytorch_foundations.cli --epochs 2 --seed 7 --output artifacts/smoke-metrics.json
 
 test:
 	@echo "Running the test suite..."

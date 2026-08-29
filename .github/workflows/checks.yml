@@ -30,3 +30,6 @@ jobs:
 
       - name: Run tests
         run: pytest -q
+
+      - name: Run CLI smoke experiment
+        run: python -m pytorch_foundations.cli --epochs 2 --seed 7 --output /tmp/pytorch-foundations-smoke.json

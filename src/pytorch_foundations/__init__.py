@@ -8,15 +8,18 @@ from .data import (
     session_aware_split,
     session_aware_train_validation_test_split,
 )
+from .metrics import ClassificationMetrics, classification_metrics
 from .model import TurtleClassifier
 from .tensor_basics import TensorSummary, normalize_features, summarize_tensor
 from .training import TrainingMetrics, set_deterministic_seed, train_and_evaluate
 
 __all__ = [
+    "ClassificationMetrics",
     "TensorSummary",
     "TrainingMetrics",
     "TurtleClassifier",
     "TurtleObservations",
+    "classification_metrics",
     "generate_observations",
     "image_level_split",
     "make_dataloader",

@@ -16,8 +16,11 @@ from .preprocessing import FeatureScaler
 @dataclass(frozen=True)
 class TrainingMetrics:
     epochs: int
+    epochs_ran: int
+    best_epoch: int
     final_train_loss: float
     train_accuracy: float
+    validation_accuracy: float | None
     test_accuracy: float
     test_macro_precision: float
     test_macro_recall: float
@@ -59,6 +62,11 @@ def _accuracy(logits: torch.Tensor, labels: torch.Tensor) -> float:
     return float((predictions == labels).float().mean().item())
 
 
+def _assert_disjoint(first: torch.Tensor, second: torch.Tensor) -> None:
+    if torch.isin(first, second).any():
+        raise ValueError("training, validation, and test indices must be disjoint")
+
+
 def train_and_evaluate(
     observations: TurtleObservations,
     train_indices: torch.Tensor,
@@ -68,6 +76,8 @@ def train_and_evaluate(
     seed: int = 42,
     batch_size: int | None = None,
     normalize: bool = False,
+    validation_indices: torch.Tensor | None = None,
+    early_stopping_patience: int | None = None,
 ) -> TrainingMetrics:
     if epochs < 1:
         raise ValueError("epochs must be at least 1")
@@ -75,10 +85,18 @@ def train_and_evaluate(
         raise ValueError("learning_rate must be positive")
     if batch_size is not None and batch_size < 1:
         raise ValueError("batch_size must be positive when provided")
+    if early_stopping_patience is not None and early_stopping_patience < 1:
+        raise ValueError("early_stopping_patience must be positive when provided")
+    if early_stopping_patience is not None and validation_indices is None:
+        raise ValueError("validation_indices are required for early stopping")
 
     _validate_observations(observations)
     _validate_indices("train_indices", train_indices, len(observations.labels))
     _validate_indices("test_indices", test_indices, len(observations.labels))
+    if validation_indices is not None:
+        _validate_indices("validation_indices", validation_indices, len(observations.labels))
+        _assert_disjoint(train_indices, validation_indices)
+        _assert_disjoint(test_indices, validation_indices)
 
     set_deterministic_seed(seed)
 
@@ -86,6 +104,11 @@ def train_and_evaluate(
     train_labels = observations.labels[train_indices]
     test_features = observations.features[test_indices]
     test_labels = observations.labels[test_indices]
+    validation_features = None
+    validation_labels = None
+    if validation_indices is not None:
+        validation_features = observations.features[validation_indices]
+        validation_labels = observations.labels[validation_indices]
 
     if normalize:
         scaler = FeatureScaler.fit(train_features)
@@ -99,6 +122,10 @@ def train_and_evaluate(
     optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
 
     final_train_loss = 0.0
+    epochs_ran = 0
+    best_epoch = epochs
+    best_validation_accuracy = None
+    best_state: dict[str, torch.Tensor] | None = None
     model.train()
     train_loader = None
     if batch_size is not None:
@@ -110,7 +137,7 @@ def train_and_evaluate(
             seed=seed,
         )
 
-    for _ in range(epochs):
+    for epoch in range(1, epochs + 1):
         if train_loader is None:
             batches = [(train_features, train_labels)]
         else:
@@ -124,17 +151,50 @@ def train_and_evaluate(
             optimizer.step()
             final_train_loss = float(loss.item())
 
+        epochs_ran = epoch
+        if validation_features is not None and validation_labels is not None:
+            model.eval()
+            with torch.no_grad():
+                validation_logits = model(validation_features)
+                current_validation_accuracy = _accuracy(validation_logits, validation_labels)
+            model.train()
+
+            if (
+                best_validation_accuracy is None
+                or current_validation_accuracy > best_validation_accuracy
+            ):
+                best_validation_accuracy = current_validation_accuracy
+                best_epoch = epoch
+                best_state = {
+                    name: parameter.detach().clone()
+                    for name, parameter in model.state_dict().items()
+                }
+            elif (
+                early_stopping_patience is not None
+                and epoch - best_epoch >= early_stopping_patience
+            ):
+                break
+
+    if best_state is not None:
+        model.load_state_dict(best_state)
+
     model.eval()
     with torch.no_grad():
         train_logits = model(train_features)
+        validation_accuracy = None
+        if validation_features is not None and validation_labels is not None:
+            validation_accuracy = _accuracy(model(validation_features), validation_labels)
         test_logits = model(test_features)
         train_accuracy = _accuracy(train_logits, train_labels)
         test_metrics = classification_metrics(test_logits, test_labels, n_classes=n_classes)
 
     return TrainingMetrics(
         epochs=epochs,
+        epochs_ran=epochs_ran,
+        best_epoch=best_epoch,
         final_train_loss=float(final_train_loss),
         train_accuracy=float(train_accuracy),
+        validation_accuracy=validation_accuracy,
         test_accuracy=test_metrics.accuracy,
         test_macro_precision=test_metrics.macro_precision,
         test_macro_recall=test_metrics.macro_recall,

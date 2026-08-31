@@ -3,7 +3,12 @@ import math
 import pytest
 import torch
 
-from pytorch_foundations.data import TurtleObservations, generate_observations, image_level_split
+from pytorch_foundations.data import (
+    TurtleObservations,
+    generate_observations,
+    image_level_split,
+    session_aware_train_validation_test_split,
+)
 from pytorch_foundations.training import train_and_evaluate
 
 
@@ -130,3 +135,43 @@ def test_train_and_evaluate_can_normalize_features_from_train_split():
     )
 
     assert metrics.features_normalized is True
+
+
+def test_train_and_evaluate_tracks_validation_and_early_stopping():
+    data = generate_observations(
+        n_turtles=4,
+        sessions_per_turtle=3,
+        images_per_session=2,
+        feature_dim=5,
+        seed=127,
+    )
+    train_idx, validation_idx, test_idx = session_aware_train_validation_test_split(
+        data, validation_fraction=0.2, test_fraction=0.25, seed=131
+    )
+
+    metrics = train_and_evaluate(
+        data,
+        train_idx,
+        test_idx,
+        validation_indices=validation_idx,
+        epochs=8,
+        early_stopping_patience=1,
+        seed=137,
+    )
+
+    assert metrics.validation_accuracy is not None
+    assert 0.0 <= metrics.validation_accuracy <= 1.0
+    assert 1 <= metrics.best_epoch <= metrics.epochs_ran <= 8
+
+
+def test_train_and_evaluate_rejects_patience_without_validation():
+    data = generate_observations(seed=139)
+    train_idx, test_idx = image_level_split(data, seed=149)
+
+    with pytest.raises(ValueError, match="validation_indices"):
+        train_and_evaluate(
+            data,
+            train_idx,
+            test_idx,
+            early_stopping_patience=2,
+        )

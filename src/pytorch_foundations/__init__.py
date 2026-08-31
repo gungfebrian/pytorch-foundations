@@ -11,12 +11,14 @@ from .data import (
 )
 from .metrics import ClassificationMetrics, classification_metrics
 from .model import TurtleClassifier
+from .preprocessing import FeatureScaler
 from .tensor_basics import TensorSummary, normalize_features, summarize_tensor
 from .training import TrainingMetrics, set_deterministic_seed, train_and_evaluate
 
 __all__ = [
     "ClassificationMetrics",
     "DatasetAudit",
+    "FeatureScaler",
     "TensorSummary",
     "TrainingMetrics",
     "TurtleClassifier",

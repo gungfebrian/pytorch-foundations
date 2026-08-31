@@ -1,5 +1,6 @@
 """PyTorch foundations package."""
 
+from .audit import DatasetAudit, audit_observations
 from .batches import make_dataloader
 from .data import (
     TurtleObservations,
@@ -15,10 +16,12 @@ from .training import TrainingMetrics, set_deterministic_seed, train_and_evaluat
 
 __all__ = [
     "ClassificationMetrics",
+    "DatasetAudit",
     "TensorSummary",
     "TrainingMetrics",
     "TurtleClassifier",
     "TurtleObservations",
+    "audit_observations",
     "classification_metrics",
     "generate_observations",
     "image_level_split",

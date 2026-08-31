@@ -5,16 +5,20 @@ import json
 from dataclasses import asdict
 from pathlib import Path
 
+from .audit import audit_observations
 from .data import generate_observations, image_level_split, session_aware_split
 from .training import TrainingMetrics, train_and_evaluate
 
 
 def _dataset_summary(data) -> dict[str, int]:
+    audit = audit_observations(data)
     return {
-        "n_samples": len(data.labels),
-        "feature_dim": int(data.features.shape[1]),
-        "n_classes": int(data.labels.unique().numel()),
-        "n_sessions": int(data.session_ids.unique().numel()),
+        "n_samples": audit.n_samples,
+        "feature_dim": audit.feature_dim,
+        "n_classes": audit.n_classes,
+        "n_sessions": audit.n_sessions,
+        "samples_per_class": list(audit.samples_per_class),
+        "sessions_per_class": list(audit.sessions_per_class),
     }
 
 

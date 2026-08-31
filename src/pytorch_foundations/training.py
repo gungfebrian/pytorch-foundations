@@ -10,6 +10,7 @@ from .batches import make_dataloader
 from .data import TurtleObservations
 from .metrics import classification_metrics
 from .model import TurtleClassifier
+from .preprocessing import FeatureScaler
 
 
 @dataclass(frozen=True)
@@ -22,6 +23,7 @@ class TrainingMetrics:
     test_macro_recall: float
     test_macro_f1: float
     test_confusion_matrix: tuple[tuple[int, ...], ...]
+    features_normalized: bool
 
 
 def set_deterministic_seed(seed: int) -> None:
@@ -65,6 +67,7 @@ def train_and_evaluate(
     learning_rate: float = 0.03,
     seed: int = 42,
     batch_size: int | None = None,
+    normalize: bool = False,
 ) -> TrainingMetrics:
     if epochs < 1:
         raise ValueError("epochs must be at least 1")
@@ -83,6 +86,11 @@ def train_and_evaluate(
     train_labels = observations.labels[train_indices]
     test_features = observations.features[test_indices]
     test_labels = observations.labels[test_indices]
+
+    if normalize:
+        scaler = FeatureScaler.fit(train_features)
+        train_features = scaler.transform(train_features)
+        test_features = scaler.transform(test_features)
 
     feature_dim = train_features.shape[1]
     n_classes = int(observations.labels.max().item()) + 1
@@ -134,4 +142,5 @@ def train_and_evaluate(
         test_confusion_matrix=tuple(
             tuple(int(value) for value in row) for row in test_metrics.confusion_matrix.tolist()
         ),
+        features_normalized=normalize,
     )

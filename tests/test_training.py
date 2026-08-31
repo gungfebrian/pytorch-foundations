@@ -108,3 +108,25 @@ def test_train_and_evaluate_supports_deterministic_mini_batches():
     second = train_and_evaluate(data, train_idx, test_idx, epochs=2, batch_size=4, seed=59)
 
     assert first == second
+
+
+def test_train_and_evaluate_can_normalize_features_from_train_split():
+    data = generate_observations(
+        n_turtles=3,
+        sessions_per_turtle=2,
+        images_per_session=3,
+        feature_dim=4,
+        seed=107,
+    )
+    train_idx, test_idx = image_level_split(data, test_fraction=0.25, seed=109)
+
+    metrics = train_and_evaluate(
+        data,
+        train_idx,
+        test_idx,
+        epochs=2,
+        seed=113,
+        normalize=True,
+    )
+
+    assert metrics.features_normalized is True

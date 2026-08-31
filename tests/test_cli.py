@@ -36,6 +36,24 @@ def test_run_experiment_returns_report_and_writes_matching_json(tmp_path: Path):
     assert saved == result
 
 
+def test_run_experiment_records_training_configuration():
+    result = run_experiment(
+        epochs=2,
+        seed=5,
+        batch_size=4,
+        learning_rate=0.01,
+        normalize=True,
+    )
+
+    assert result["training"] == {
+        "epochs": 2,
+        "seed": 5,
+        "batch_size": 4,
+        "learning_rate": 0.01,
+        "normalize": True,
+    }
+
+
 def test_main_prints_both_split_strategies(monkeypatch, capsys, tmp_path: Path):
     output = tmp_path / "report.json"
     monkeypatch.setattr(
@@ -49,6 +67,31 @@ def test_main_prints_both_split_strategies(monkeypatch, capsys, tmp_path: Path):
     assert exit_code == 0
     assert "Image-Level Split" in captured.out
     assert "Session-Aware Split" in captured.out
+
+
+def test_main_accepts_training_controls(monkeypatch, capsys, tmp_path: Path):
+    output = tmp_path / "controlled-report.json"
+    monkeypatch.setattr(
+        "sys.argv",
+        [
+            "pytorch-foundations",
+            "--epochs",
+            "2",
+            "--seed",
+            "5",
+            "--batch-size",
+            "4",
+            "--learning-rate",
+            "0.01",
+            "--normalize",
+            "--output",
+            str(output),
+        ],
+    )
+
+    assert main() == 0
+    capsys.readouterr()
+    assert json.loads(output.read_text())["training"]["normalize"] is True
 
 
 def test_module_execution_writes_json_report(tmp_path: Path):

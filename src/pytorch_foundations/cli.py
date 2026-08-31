@@ -41,6 +41,9 @@ def run_experiment(
     epochs: int = 40,
     seed: int = 42,
     output: Path | None = None,
+    batch_size: int | None = None,
+    learning_rate: float = 0.03,
+    normalize: bool = False,
 ) -> dict[str, object]:
     data = generate_observations(seed=seed)
 
@@ -52,6 +55,9 @@ def run_experiment(
         image_train_idx,
         image_test_idx,
         epochs=epochs,
+        batch_size=batch_size,
+        learning_rate=learning_rate,
+        normalize=normalize,
         seed=seed,
     )
     session_metrics = train_and_evaluate(
@@ -59,11 +65,21 @@ def run_experiment(
         session_train_idx,
         session_test_idx,
         epochs=epochs,
+        batch_size=batch_size,
+        learning_rate=learning_rate,
+        normalize=normalize,
         seed=seed,
     )
 
     result: dict[str, object] = {
         "dataset": _dataset_summary(data),
+        "training": {
+            "epochs": epochs,
+            "seed": seed,
+            "batch_size": batch_size,
+            "learning_rate": learning_rate,
+            "normalize": normalize,
+        },
         "image_level_split": _serialize_metrics(
             image_metrics,
             _overlapping_sessions(data, image_train_idx, image_test_idx),
@@ -85,11 +101,29 @@ def main() -> int:
     parser = argparse.ArgumentParser(description="Run the PyTorch foundations leakage experiment.")
     parser.add_argument("--epochs", type=int, default=40, help="Training epochs for each split.")
     parser.add_argument("--seed", type=int, default=42, help="Deterministic seed for all steps.")
+    parser.add_argument(
+        "--batch-size", type=int, default=None, help="Optional mini-batch size for training."
+    )
+    parser.add_argument(
+        "--learning-rate", type=float, default=0.03, help="Adam learning rate for training."
+    )
+    parser.add_argument(
+        "--normalize",
+        action="store_true",
+        help="Fit a feature scaler on each training split before training.",
+    )
     parser.add_argument("--output", type=Path, default=None, help="Optional JSON output path.")
     args = parser.parse_args()
 
     try:
-        result = run_experiment(epochs=args.epochs, seed=args.seed, output=args.output)
+        result = run_experiment(
+            epochs=args.epochs,
+            seed=args.seed,
+            output=args.output,
+            batch_size=args.batch_size,
+            learning_rate=args.learning_rate,
+            normalize=args.normalize,
+        )
     except ValueError as exc:
         parser.error(str(exc))
 

@@ -28,6 +28,10 @@ In the verified run, the image-level split had 28 overlapping sessions between t
 
 I also record macro precision, recall, F1, and a confusion matrix. Macro F1 gives every turtle identity equal weight, which makes the session-aware result easier to inspect than accuracy alone.
 
+Before training, I can fit a scaler on the training partition only and apply those statistics to the test partition. Fitting on all rows would leak information from evaluation into preprocessing, even if the model never sees the test labels.
+
+The training helper can also monitor a session-disjoint validation partition and restore the best checkpoint when validation accuracy stops improving. The returned `best_epoch` and `epochs_ran` make that decision visible in the report.
+
 ## Limitations
 
 - I am using synthetic numeric observations instead of a real image dataset.
@@ -42,5 +46,5 @@ If I had to explain the core lesson from memory, I would say this: when photos f
 ## Next exercises
 
 1. Add validation tracking and early stopping.
-2. Compare repeated grouped splits and summarize variation.
+2. Wire the validation-aware helper into the CLI and save a model checkpoint.
 3. Try a real grouped dataset with clear consent and documentation.

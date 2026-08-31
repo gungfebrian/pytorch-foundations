@@ -33,6 +33,8 @@ make check
 
 The training command writes a JSON report to `artifacts/metrics.json`.
 The shorter `make smoke` command exercises the complete CLI path in a few seconds.
+For a controlled run, add options such as `--batch-size 16 --learning-rate 0.01 --normalize`;
+the selected values are recorded in the JSON report.
 
 ## Verified result
 
@@ -81,10 +83,14 @@ I learned that data splitting is part of model design, not an afterthought. When
 ## Repository structure
 
 - `src/pytorch_foundations/data.py`: synthetic observation generation and safe split helpers
+- `src/pytorch_foundations/audit.py`: dataset shape and class/session distribution audit
 - `src/pytorch_foundations/tensor_basics.py`: tensor inspection and feature normalization exercise
 - `src/pytorch_foundations/batches.py`: deterministic `DataLoader` mini-batch helper
+- `src/pytorch_foundations/preprocessing.py`: train-fitted feature scaler
 - `src/pytorch_foundations/metrics.py`: macro classification metrics and confusion matrices
 - `src/pytorch_foundations/model.py`: compact classifier
+- `src/pytorch_foundations/model_summary.py`: total and trainable parameter counts
+- `src/pytorch_foundations/checkpoints.py`: model checkpoint round-trip with run metadata
 - `src/pytorch_foundations/training.py`: deterministic training and evaluation loop
 - `src/pytorch_foundations/cli.py`: reproducible experiment command and JSON report writer
 - `tests/`: focused checks for data, model, training, and CLI behavior
@@ -94,6 +100,6 @@ I learned that data splitting is part of model design, not an afterthought. When
 
 ## Next steps
 
-- Add validation monitoring and early stopping to the training loop.
+- Wire validation monitoring and early stopping into the CLI experiment.
 - Compare repeated grouped splits instead of relying on one deterministic split.
 - Replace the toy grouped data with a real, well-documented dataset collected with consent.

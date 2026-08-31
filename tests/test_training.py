@@ -31,6 +31,8 @@ def test_train_and_evaluate_returns_finite_bounded_metrics():
     assert 0.0 <= metrics.test_macro_recall <= 1.0
     assert 0.0 <= metrics.test_macro_f1 <= 1.0
     assert len(metrics.test_confusion_matrix) == 4
+    assert metrics.parameter_count == 6 * 48 + 48 + 48 * 4 + 4
+    assert metrics.trainable_parameter_count == metrics.parameter_count
     assert math.isfinite(metrics.final_train_loss)
 
 

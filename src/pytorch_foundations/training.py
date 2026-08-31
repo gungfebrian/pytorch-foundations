@@ -10,6 +10,7 @@ from .batches import make_dataloader
 from .data import TurtleObservations
 from .metrics import classification_metrics
 from .model import TurtleClassifier
+from .model_summary import summarize_model
 from .preprocessing import FeatureScaler
 
 
@@ -18,6 +19,8 @@ class TrainingMetrics:
     epochs: int
     epochs_ran: int
     best_epoch: int
+    parameter_count: int
+    trainable_parameter_count: int
     final_train_loss: float
     train_accuracy: float
     validation_accuracy: float | None
@@ -118,6 +121,7 @@ def train_and_evaluate(
     feature_dim = train_features.shape[1]
     n_classes = int(observations.labels.max().item()) + 1
     model = TurtleClassifier(feature_dim=feature_dim, n_classes=n_classes)
+    model_summary = summarize_model(model)
     loss_fn = nn.CrossEntropyLoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
 
@@ -192,6 +196,8 @@ def train_and_evaluate(
         epochs=epochs,
         epochs_ran=epochs_ran,
         best_epoch=best_epoch,
+        parameter_count=model_summary.parameter_count,
+        trainable_parameter_count=model_summary.trainable_parameter_count,
         final_train_loss=float(final_train_loss),
         train_accuracy=float(train_accuracy),
         validation_accuracy=validation_accuracy,
